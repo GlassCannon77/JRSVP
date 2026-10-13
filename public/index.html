@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Knock Knock Invites</title>
+<meta name="description" content="Seasonal party invitations with RSVPs, a guest list, a photo wall and free QR codes. Guests never sign in.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="/css/app.css">
+<link rel="stylesheet" href="/css/invite.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0f6b66"/><path d="M18 54V16a4 4 0 0 1 4-4h20a4 4 0 0 1 4 4v38" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M10 54h44" stroke="#fff" stroke-width="5" stroke-linecap="round"/><circle cx="39" cy="35" r="3.4" fill="#ffc94d"/></svg><b>Knock Knock</b></a>
+  <span class="tag">Invites with RSVPs, a guest list and a photo wall. Guests never sign in.</span>
+</header>
+
+<main class="studio" id="studio" data-view="edit">
+  <div class="panel">
+    <div class="intro">
+      <h1 id="mode-title">Make an invitation</h1>
+      <p id="mode-sub">Pick a season, fill in the details, and watch the invite build in the preview.</p>
+    </div>
+
+    <section class="box" id="mine" hidden>
+      <h3>Your parties</h3>
+      <ul class="parties" id="mine-list"></ul>
+      <p class="hint">Saved on this device. Your host links are the only way to manage a party, so keep them somewhere safe.</p>
+    </section>
+
+    <section class="box good" id="done" hidden></section>
+
+    <form id="builder" novalidate>
+      <details class="sec" open>
+        <summary>Theme <small id="sum-theme"></small></summary>
+        <div class="sec-body">
+          <div class="themes" id="themes" role="radiogroup" aria-label="Theme"></div>
+        </div>
+      </details>
+
+      <details class="sec" open>
+        <summary>The party</summary>
+        <div class="sec-body">
+          <div class="field"><label for="f-title">Party name</label><input type="text" id="f-title" data-k="title" maxlength="80" required></div>
+          <div class="field"><label for="f-hosts">Hosted by</label><input type="text" id="f-hosts" data-k="hosts" maxlength="80" placeholder="Jordan & Esther"></div>
+          <div class="grid3">
+            <div class="field"><label for="f-date">Date</label><input type="date" id="f-date" data-k="date"></div>
+            <div class="field"><label for="f-start">Starts</label><input type="time" id="f-start" data-k="start"></div>
+            <div class="field"><label for="f-end">Ends</label><input type="time" id="f-end" data-k="end"></div>
+          </div>
+          <div class="field"><label for="f-venue">Place name</label><input type="text" id="f-venue" data-k="venue" maxlength="80" placeholder="Our place, the rooftop, Mom's house"></div>
+          <div class="field"><label for="f-address">Address</label><input type="text" id="f-address" data-k="address" maxlength="160" placeholder="Street, city, state" autocomplete="street-address"><span class="hint">Guests get a map link and directions. Anyone with the invite link can see it.</span></div>
+          <div class="field"><label for="f-dress">Dress code</label><input type="text" id="f-dress" data-k="dress" maxlength="80" placeholder="Costumes, ugly sweaters, all black…"></div>
+          <div class="field"><label for="f-note">Message to guests</label><textarea id="f-note" data-k="note" maxlength="600"></textarea></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary>Look &amp; feel</summary>
+        <div class="sec-body">
+          <div class="colors">
+            <label class="color"><input type="color" id="c-bg" data-c="bg"><span>Background</span><button type="button" data-reset="bg">Reset</button></label>
+            <label class="color"><input type="color" id="c-surface" data-c="surface"><span>Cards</span><button type="button" data-reset="surface">Reset</button></label>
+            <label class="color"><input type="color" id="c-ink" data-c="ink"><span>Text</span><button type="button" data-reset="ink">Reset</button></label>
+            <label class="color"><input type="color" id="c-accent" data-c="accent"><span>Accent</span><button type="button" data-reset="accent">Reset</button></label>
+          </div>
+          <div class="grid2">
+            <div class="field"><label for="f-dfont">Headline font</label><select id="f-dfont" data-k="custom.displayFont"></select></div>
+            <div class="field"><label for="f-bfont">Text font</label><select id="f-bfont" data-k="custom.bodyFont"></select></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label for="f-motif">Animation</label><select id="f-motif" data-k="custom.motif"></select></div>
+            <div class="field"><label for="f-amount">How much: <span id="amount-label"></span></label><input type="range" id="f-amount" min="0" max="3" step="1" data-k="custom.motifAmount" data-num></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary>Wording</summary>
+        <div class="sec-body">
+          <p class="hint">Leave a box empty to use the theme's wording, shown in grey.</p>
+          <div class="field"><label for="w-eyebrow">Line above the title</label><input type="text" id="w-eyebrow" data-k="copy.eyebrow" maxlength="60"></div>
+          <div class="field"><label for="w-rsvp">RSVP heading</label><input type="text" id="w-rsvp" data-k="copy.rsvpHeading" maxlength="60"></div>
+          <div class="grid3">
+            <div class="field"><label for="w-yes">Yes button</label><input type="text" id="w-yes" data-k="copy.yes" maxlength="30"></div>
+            <div class="field"><label for="w-maybe">Maybe button</label><input type="text" id="w-maybe" data-k="copy.maybe" maxlength="30"></div>
+            <div class="field"><label for="w-no">No button</label><input type="text" id="w-no" data-k="copy.no" maxlength="30"></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label for="w-guests">Guest list heading</label><input type="text" id="w-guests" data-k="copy.guestsHeading" maxlength="60"></div>
+            <div class="field"><label for="w-photos">Photo wall heading</label><input type="text" id="w-photos" data-k="copy.photosHeading" maxlength="60"></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary>RSVP options</summary>
+        <div class="sec-body">
+          <div class="grid2">
+            <div class="field"><label for="r-deadline">RSVP by</label><input type="date" id="r-deadline" data-k="rsvp.deadline"></div>
+            <div class="field"><label for="r-plus">Extra guests each</label><select id="r-plus" data-k="rsvp.maxPlus" data-num>
+              <option value="0">None</option><option value="1">Up to 1</option><option value="2">Up to 2</option><option value="3">Up to 3</option><option value="4">Up to 4</option><option value="6">Up to 6</option><option value="10">Up to 10</option></select></div>
+          </div>
+          <label class="check"><input type="checkbox" data-k="rsvp.allowMaybe"><span>Offer a "Maybe" answer</span></label>
+          <label class="check"><input type="checkbox" data-k="rsvp.showList"><span>Show the guest list on the invite<small>Guests see names, answers and the headcount. Contact details and notes stay private.</small></span></label>
+          <label class="check"><input type="checkbox" data-k="rsvp.question.enabled"><span>Ask a fun question</span></label>
+          <div class="grid2" id="q-fields">
+            <div class="field"><label for="q-label">Question</label><input type="text" id="q-label" data-k="rsvp.question.label" maxlength="60"></div>
+            <div class="field"><label for="q-ph">Example answer</label><input type="text" id="q-ph" data-k="rsvp.question.placeholder" maxlength="60"></div>
+          </div>
+          <label class="check" id="q-public"><input type="checkbox" data-k="rsvp.question.public"><span>Show answers on the guest list</span></label>
+          <label class="check"><input type="checkbox" data-k="rsvp.askContact"><span>Ask for a phone number or email<small>Only you see it, on your host page.</small></span></label>
+          <label class="check"><input type="checkbox" data-k="rsvp.open"><span>Accepting RSVPs</span></label>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary>Photo wall</summary>
+        <div class="sec-body">
+          <label class="check"><input type="checkbox" data-k="photos.enabled"><span>Include a photo wall<small>Guests scan the party QR code and add the pictures they take. No app or account needed.</small></span></label>
+          <label class="check"><input type="checkbox" data-k="photos.uploads"><span>Guests can add photos</span></label>
+          <label class="check"><input type="checkbox" data-k="photos.guestsCanView"><span>Guests can see everyone's photos<small>Turn off to have photos go only to you.</small></span></label>
+        </div>
+      </details>
+
+      <div class="publish">
+        <div class="field" id="pass-field" hidden><label for="f-pass">Host passcode</label><input type="password" id="f-pass" autocomplete="current-password"><span class="hint">Set by whoever runs this site, so strangers can't create parties on it.</span></div>
+        <button class="btn primary wide" type="submit" id="publish">Create invitation</button>
+        <p class="status" id="pub-status" role="status"></p>
+        <div class="row" id="edit-tools" hidden><button class="btn ghost small" type="button" id="new-btn">Start a new invitation</button></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="stage" aria-label="Live preview">
+    <div class="phone"><div class="phone-scroll" id="preview"></div></div>
+    <p class="stage-note">Live preview. Buttons are inactive until the invite is published.</p>
+  </div>
+
+  <nav class="switch" aria-label="View">
+    <button type="button" data-view="edit" aria-pressed="true">Edit</button>
+    <button type="button" data-view="preview" aria-pressed="false">Preview</button>
+  </nav>
+</main>
+
+<script src="/vendor/qrcode.js"></script>
+<script type="module" src="/js/builder.js"></script>
+</body>
+</html>

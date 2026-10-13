@@ -1,0 +1,16 @@
+{
+  "name": "knock-knock-invites",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Seasonal party invitations with RSVPs, a guest list, a photo wall and free QR codes. Runs on Netlify.",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.4"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

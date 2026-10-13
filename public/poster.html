@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Party QR Sign</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #e9e9ec; font-family: system-ui, sans-serif; }
+  .bar { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; padding: 14px 16px; }
+  .bar button, .bar a { font: 600 15px/1 system-ui, sans-serif; padding: 12px 18px; border-radius: 10px; border: 1px solid #c9c9cf; background: #fff; color: #16131c; cursor: pointer; text-decoration: none; }
+  .bar button.primary { background: #16131c; color: #fff; border-color: #16131c; }
+  .sheet { width: min(8.5in, calc(100vw - 32px)); aspect-ratio: 8.5 / 11; margin: 0 auto 32px; position: relative; overflow: hidden;
+    background: linear-gradient(170deg, var(--i-bg), var(--i-bg2)); color: var(--i-ink); font-family: var(--i-body);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2.2%; padding: 6% 8%;
+    box-shadow: 0 20px 50px -25px rgb(0 0 0 / .4); container-type: inline-size; }
+  .sheet::before { content: ""; position: absolute; inset: 3%; border: 3px dashed var(--i-line); border-radius: 18px; pointer-events: none; }
+  .icon svg { width: 14cqw; height: 14cqw; display: block; }
+  .eyebrow { font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--i-muted); font-size: 2.4cqw; margin: 0; }
+  h1 { font-family: var(--i-display); font-weight: 400; color: var(--i-accent); font-size: 11cqw; line-height: .95; margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+  .cta { font-weight: 800; font-size: 5.4cqw; margin: 0; }
+  .code { background: #fff; padding: 3cqw; border-radius: 3cqw; width: 58cqw; }
+  .code svg { display: block; width: 100%; height: auto; }
+  .sub { color: var(--i-muted); font-size: 2.6cqw; margin: 0; }
+  .url { font-family: ui-monospace, Menlo, monospace; font-size: 2cqw; color: var(--i-muted); margin: 0; overflow-wrap: anywhere; }
+  .msg { max-width: 640px; margin: 40px auto; padding: 0 16px; text-align: center; }
+  @media print {
+    @page { size: letter portrait; margin: 0; }
+    html, body { background: none; }
+    .bar { display: none; }
+    .sheet { width: 8.5in; height: 11in; aspect-ratio: auto; margin: 0; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="bar"><button class="primary" type="button" id="print">Print sign</button><a id="swap" href="#">Switch to RSVP sign</a></div>
+<div id="app"><p class="msg">Loading…</p></div>
+<script src="/vendor/qrcode.js"></script>
+<script type="module">
+  import { api } from "/js/api.js";
+  import { resolveTheme, applyTheme } from "/js/themes.js";
+  import { iconSvg } from "/js/icons.js";
+  import { qrSvg } from "/js/qr.js";
+  import { h, fmtDate, fmtTime } from "/js/invite-view.js";
+
+  const id = (location.pathname.match(/^\/e\/([a-z0-9]+)/) || [])[1];
+  const forPhotos = new URLSearchParams(location.search).get("for") !== "invite";
+  const app = document.getElementById("app");
+  const swap = document.getElementById("swap");
+  swap.textContent = forPhotos ? "Switch to RSVP sign" : "Switch to photo sign";
+  swap.href = `/e/${id}/poster?for=${forPhotos ? "invite" : "photos"}`;
+  document.getElementById("print").addEventListener("click", () => window.print());
+
+  try {
+    const { event: ev } = await api(`/api/events/${id}`);
+    const t = resolveTheme(ev);
+    const url = `${location.origin}/e/${id}${forPhotos ? "#photos" : ""}`;
+    const sheet = h("section", { class: "sheet" },
+      h("div", { class: "icon", html: iconSvg(t.icon, t.colors, 96) }),
+      h("p", { class: "eyebrow", text: forPhotos ? t.copy.photosHeading : t.copy.eyebrow }),
+      h("h1", { text: ev.title }),
+      h("p", { class: "cta", text: forPhotos ? "Scan to add your photos" : "Scan to RSVP" }),
+      h("div", { class: "code", html: qrSvg(url, { dark: "#111", light: "#fff", title: forPhotos ? "QR code to add photos" : "QR code to RSVP" }) }),
+      h("p", { class: "sub", text: forPhotos ? "Point your phone camera here. No app or sign-in needed." : [ev.date ? fmtDate(ev.date) : "", ev.start ? fmtTime(ev.start) : ""].filter(Boolean).join(" · ") }),
+      h("p", { class: "url", text: url.replace(/^https?:\/\//, "") }));
+    applyTheme(sheet, t);
+    document.title = `${ev.title} · ${forPhotos ? "Photo" : "RSVP"} sign`;
+    app.replaceChildren(sheet);
+  } catch (e) {
+    app.replaceChildren(h("p", { class: "msg", text: e.message }));
+  }
+</script>
+</body>
+</html>

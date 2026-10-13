@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>You're invited</title>
+<meta name="theme-color" content="#16131c">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/css/invite.css">
+<style>
+  html, body { margin: 0; min-height: 100%; background: #16131c; }
+  body { min-height: 100vh; }
+  #app { min-height: 100vh; }
+  .boot { min-height: 100vh; display: grid; place-items: center; color: #cfc8d4; font: 16px/1.5 system-ui, sans-serif; padding: 24px; text-align: center; }
+  .boot h1 { font-size: 1.4rem; margin: 0 0 6px; color: #fff; }
+  .hostbar { position: sticky; top: 0; z-index: 5; display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap;
+    padding: 8px 16px calc(8px) 16px; padding-top: calc(8px + env(safe-area-inset-top, 0px)); background: #16131c; color: #fff; font: 600 14px/1.3 system-ui, sans-serif; }
+  .hostbar a { color: #16131c; background: #fff; border-radius: 999px; padding: 6px 14px; text-decoration: none; }
+</style>
+</head>
+<body>
+<div id="app"><div class="boot"><p>Opening your invitation…</p></div></div>
+<script src="/vendor/qrcode.js"></script>
+<script type="module" src="/js/invite.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Host dashboard and printable QR sign. The guest invite at /e/:id is served
+# by netlify/functions/invite-page.mjs so texted links get a proper preview.
+[[redirects]]
+  from = "/e/:id/host"
+  to = "/host.html"
+  status = 200
+
+[[redirects]]
+  from = "/e/:id/poster"
+  to = "/poster.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
