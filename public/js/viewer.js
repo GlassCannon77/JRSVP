@@ -82,9 +82,10 @@ function render() {
   const bar = $(".pv-bar"); bar.textContent = "";
   const btn = (label, cls, fn) => { const b = document.createElement("button"); b.type = "button"; b.textContent = label; if (cls) b.className = cls; b.addEventListener("click", fn); bar.append(b); return b; };
   btn("Save photo", "pv-primary", () => saveOne(p));
-  if (opts.onDelete) {
-    const del = btn("Delete", "pv-danger", async () => {
-      if (!del.classList.contains("armed")) { del.classList.add("armed"); del.textContent = "Tap again to delete"; setTimeout(() => { del.classList.remove("armed"); del.textContent = "Delete"; }, 3500); return; }
+  if (opts.onDelete && (!opts.canDelete || opts.canDelete(p))) {
+    const label = opts.deleteLabel || "Delete";
+    const del = btn(label, "pv-danger", async () => {
+      if (!del.classList.contains("armed")) { del.classList.add("armed"); del.textContent = "Tap again to remove"; setTimeout(() => { del.classList.remove("armed"); del.textContent = label; }, 3500); return; }
       del.disabled = true;
       try {
         await opts.onDelete(p);

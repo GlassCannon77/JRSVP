@@ -143,7 +143,7 @@ async function route(req, parts) {
       const out = { event: publicEvent(ev), counts: counts(rs.list), host };
       if (host) out.rsvps = rs.list.map(({ tokenHash, ...r }) => r);
       else if (ev.rsvp.showList) out.rsvps = rs.list.map((r) => publicRsvp(r, ev));
-      out.photos = ev.photos.enabled && (host || ev.photos.guestsCanView) ? ps.list : [];
+      out.photos = ev.photos.enabled && (host || ev.photos.guestsCanView) ? ps.list.map(({ tokenHash, ...p }) => p) : [];
       out.photoCount = ps.list.length;
       return json(out);
     }
@@ -191,8 +191,13 @@ async function route(req, parts) {
       return json({ rsvp: out });
     }
     if (subId && m === "DELETE") {
-      requireHost(req, ev);
-      await mutate(`rsvps/${id}`, (d) => { d.list = d.list.filter((x) => x.id !== subId); }, () => ({ list: [] }));
+      const tok = req.headers.get("x-rsvp-token") || "";
+      await mutate(`rsvps/${id}`, (d) => {
+        const rec = d.list.find((x) => x.id === subId);
+        if (!rec) return;
+        if (!host && !sameHash(sha(tok), rec.tokenHash)) throw new HttpError(403, "You can only remove your own RSVP.");
+        d.list = d.list.filter((x) => x.id !== subId);
+      }, () => ({ list: [] }));
       return json({ deleted: true });
     }
   }
@@ -205,14 +210,15 @@ async function route(req, parts) {
       if (!full || typeof full === "string" || !thumb || typeof thumb === "string") throw new HttpError(400, "No photo in that upload.");
       if (!IMG_TYPES.includes(full.type) || !IMG_TYPES.includes(thumb.type)) throw new HttpError(415, "Photos must be JPG, PNG or WebP.");
       if (full.size > 4.5e6 || thumb.size > 6e5) throw new HttpError(413, "That photo is too large.");
-      const pid = shortId(12);
-      const rec = { id: pid, name: str(form.get("name"), 50) || "Guest", w: int(form.get("w"), 1, 10000, 0), h: int(form.get("h"), 1, 10000, 0), at: new Date().toISOString() };
+      const pid = shortId(12), tok = token(18);
+      const rec = { id: pid, tokenHash: sha(tok), name: str(form.get("name"), 50) || "Guest", w: int(form.get("w"), 1, 10000, 0), h: int(form.get("h"), 1, 10000, 0), at: new Date().toISOString() };
       const cur = (await s.get(`photos/${id}`, { type: "json" })) || { list: [] };
       if (cur.list.length >= MAX_PHOTOS) throw new HttpError(409, "The photo wall is full.");
       await s.set(`photo/${id}/${pid}/full`, await full.arrayBuffer(), { metadata: { type: full.type } });
       await s.set(`photo/${id}/${pid}/thumb`, await thumb.arrayBuffer(), { metadata: { type: thumb.type } });
       await mutate(`photos/${id}`, (d) => { d.list.unshift(rec); }, () => ({ list: [] }));
-      return json({ photo: rec }, 201);
+      const { tokenHash, ...pub } = rec;
+      return json({ photo: pub, token: tok }, 201);
     }
     if (subId && m === "GET" && (size === "full" || size === "thumb")) {
       if (!/^[a-z0-9]{12}$/.test(subId)) throw new HttpError(404, "Not found.");
@@ -225,8 +231,13 @@ async function route(req, parts) {
       } });
     }
     if (subId && m === "DELETE") {
-      requireHost(req, ev);
-      await mutate(`photos/${id}`, (d) => { d.list = d.list.filter((x) => x.id !== subId); }, () => ({ list: [] }));
+      const tok = req.headers.get("x-photo-token") || "";
+      await mutate(`photos/${id}`, (d) => {
+        const rec = d.list.find((x) => x.id === subId);
+        if (!rec) return;
+        if (!host && !(rec.tokenHash && sameHash(sha(tok), rec.tokenHash))) throw new HttpError(403, "You can only remove photos you added.");
+        d.list = d.list.filter((x) => x.id !== subId);
+      }, () => ({ list: [] }));
       await s.delete(`photo/${id}/${subId}/full`); await s.delete(`photo/${id}/${subId}/thumb`);
       return json({ deleted: true });
     }

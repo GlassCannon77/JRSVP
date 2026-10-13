@@ -13,7 +13,7 @@ Seasonal party invitations with RSVPs, a live guest list, a photo wall and free 
   - The builder shows a live phone preview as you change things.
 - **RSVPs without sign-in:**
   - Guests answer yes / maybe / no, bring extra guests, answer your question and leave you a private note.
-  - They can change their answer later from the same phone.
+  - They can change their answer later, or remove their RSVP, from the same phone.
 - **Guest list:**
   - Shows on the invite, or you can hide it.
   - Contact details and notes are only visible to you.
@@ -21,6 +21,7 @@ Seasonal party invitations with RSVPs, a live guest list, a photo wall and free 
   - Guests scan the party QR code and land on a photo drop page (`/e/:id/photos`) with two big buttons, Take a photo and Choose from your photos. No app or sign-in.
   - Photos are shrunk on the phone before upload, and thumbnails keep the wall fast.
   - Tapping a photo opens a full-screen viewer with a big close button. Swipe to browse; back, Escape or tapping outside also close it.
+  - Guests can remove photos they added (right after uploading, or later from the photo wall on the same phone). They can't touch anyone else's.
   - **Save all photos** on the host page: on a phone, saves them to your camera roll through the share sheet (in groups of 20); anywhere, downloads one ZIP file.
 - **Free QR codes for every invite:**
   - The encoder is bundled in the site, so there's no QR service, API key or watermark.
@@ -29,6 +30,7 @@ Seasonal party invitations with RSVPs, a live guest list, a photo wall and free 
 - **Host page:**
   - Headcount including extra guests, plus RSVPs you can filter.
   - Download the RSVPs as a spreadsheet (CSV).
+  - Remove any guest or any photo (two taps, so nothing goes by accident).
   - Quick switches (close RSVPs, pause uploads), photo moderation, edit and delete.
 - **Calendar and maps:** guests get "Add to calendar" (Apple/Outlook .ics), Google Calendar and Directions buttons.
 - **Link previews:** a texted invite shows the party name, hosts and date in the message preview.

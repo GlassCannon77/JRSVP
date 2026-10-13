@@ -33,3 +33,10 @@ export function rememberParty(p) {
 export function forgetParty(id) {
   try { localStorage.setItem("kk:parties", JSON.stringify(myParties().filter((x) => x.id !== id))); localStorage.removeItem(`kk:host:${id}`); } catch {}
 }
+
+// Photos this phone uploaded, with the private token that lets it remove them.
+export const myPhotos = {
+  all(eid) { try { return JSON.parse(localStorage.getItem(`kk:photos:${eid}`)) || {}; } catch { return {}; } },
+  add(eid, pid, tok) { const m = myPhotos.all(eid); m[pid] = tok; try { localStorage.setItem(`kk:photos:${eid}`, JSON.stringify(m)); } catch {} },
+  drop(eid, pid) { const m = myPhotos.all(eid); delete m[pid]; try { localStorage.setItem(`kk:photos:${eid}`, JSON.stringify(m)); } catch {} },
+};

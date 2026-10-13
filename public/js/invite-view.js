@@ -5,7 +5,7 @@ import { resolveTheme, applyTheme } from "./themes.js";
 import { iconSvg } from "./icons.js";
 import { startMotif } from "./motifs.js";
 import { qrSvg } from "./qr.js";
-import { api } from "./api.js";
+import { api, myPhotos } from "./api.js";
 import { openViewer as showPhoto } from "./viewer.js";
 
 // ---------- small helpers ----------
@@ -232,6 +232,23 @@ export function mountInvite(root, event, opts = {}) {
   }
 
   function renderDone(body) {
+    const removeMsg = h("p", { class: "inv-status", role: "status" });
+    const removeBtn = h("button", { class: "inv-btn ghost small", type: "button", text: "Remove my RSVP" });
+    removeBtn.addEventListener("click", async () => {
+      if (!removeBtn.dataset.armed) {
+        removeBtn.dataset.armed = "1"; removeBtn.textContent = "Tap again to remove";
+        setTimeout(() => { delete removeBtn.dataset.armed; removeBtn.textContent = "Remove my RSVP"; }, 3500); return;
+      }
+      const saved = mine();
+      removeBtn.disabled = true;
+      try {
+        if (saved && saved.id) await api(`/api/events/${ev.id}/rsvps/${saved.id}`, { method: "DELETE", headers: { "x-rsvp-token": saved.token } });
+        try { localStorage.removeItem(`kk:rsvp:${ev.id}`); } catch {}
+        rsvpBody.classList.remove("inv-done");
+        renderForm();
+        opts.onChange && opts.onChange();
+      } catch (err) { removeMsg.classList.add("bad"); removeMsg.textContent = err.message; removeBtn.disabled = false; }
+    });
     const nameBox = root.querySelector("#photo-name"); if (nameBox) nameBox.hidden = true;
     rsvpBody.textContent = "";
     rsvpBody.classList.add("inv-done");
@@ -244,7 +261,9 @@ export function mountInvite(root, event, opts = {}) {
       h("p", { class: "big", text: line }),
       h("p", { class: "inv-status", text: "Your RSVP is saved." + (bits.length ? " " + bits.join(" · ") : "") }),
       h("div", { class: "inv-actions", style: "justify-content:center" },
-        h("button", { class: "inv-btn ghost small", type: "button", onclick: () => { rsvpBody.classList.remove("inv-done"); renderForm(body); } }, "Change my answer")),
+        h("button", { class: "inv-btn ghost small", type: "button", onclick: () => { rsvpBody.classList.remove("inv-done"); renderForm(body); } }, "Change my answer"),
+        removeBtn),
+      removeMsg,
     );
   }
 
@@ -316,12 +335,23 @@ export function mountInvite(root, event, opts = {}) {
       grid.append(h("p", { class: "inv-empty", style: "grid-column:1/-1", text: !canView ? "Photos go straight to the hosts." : "No photos yet. Pictures taken at the party show up here for everyone." }));
       return;
     }
-    list.forEach((p, i) => grid.append(h("button", { class: "inv-shot", type: "button", "aria-label": `Photo from ${p.name}`, onclick: () => openViewer(i) },
-      h("img", { src: photoSrc(p, "thumb"), alt: "", loading: "lazy" }))));
+    const mineMap = preview ? {} : myPhotos.all(ev.id);
+    list.forEach((p, i) => grid.append(h("button", { class: "inv-shot", type: "button", "aria-label": `Photo from ${p.name}${mineMap[p.id] ? " (yours)" : ""}`, onclick: () => openViewer(i) },
+      h("img", { src: photoSrc(p, "thumb"), alt: "", loading: "lazy" }),
+      mineMap[p.id] ? h("span", { class: "inv-yours", text: "Yours" }) : null)));
   }
   function openViewer(i) {
     const list = data.photos || []; if (!list[i]) return;
-    showPhoto(list, i, { src: photoSrc, filePrefix: ev.title });
+    const mineMap = preview ? {} : myPhotos.all(ev.id);
+    showPhoto(list, i, {
+      src: photoSrc, filePrefix: ev.title,
+      canDelete: (p) => !!mineMap[p.id], deleteLabel: "Remove my photo",
+      onDelete: async (p) => {
+        await api(`/api/events/${ev.id}/photos/${p.id}`, { method: "DELETE", headers: { "x-photo-token": mineMap[p.id] } });
+        myPhotos.drop(ev.id, p.id);
+      },
+      onClose: () => opts.onChange && opts.onChange(),
+    });
   }
   async function upload(files, who, btn) {
     btn.disabled = true;
@@ -334,7 +364,8 @@ export function mountInvite(root, event, opts = {}) {
         const fd = new FormData();
         fd.append("full", full.blob, "full.jpg"); fd.append("thumb", thumb.blob, "thumb.jpg");
         fd.append("name", who); fd.append("w", full.w); fd.append("h", full.h);
-        await api(`/api/events/${ev.id}/photos`, { method: "POST", form: fd });
+        const up = await api(`/api/events/${ev.id}/photos`, { method: "POST", form: fd });
+        if (up && up.token) myPhotos.add(ev.id, up.photo.id, up.token);
         ok++;
       } catch (err) {
         if (err.status) { stop = err.message; if ([409, 413, 403].includes(err.status)) break; }

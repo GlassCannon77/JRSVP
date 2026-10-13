@@ -145,7 +145,7 @@ function render() {
   else {
     const tbody = h("tbody");
     for (const r of shown) {
-      const del = armed(h("button", { class: "linkbtn", type: "button", text: "Remove" }), "Remove", async () => {
+      const del = armed(h("button", { class: "btn danger small", type: "button", text: "Remove guest", "aria-label": `Remove ${r.name}` }), "Remove guest", async () => {
         await api(`/api/events/${id}/rsvps/${r.id}`, { method: "DELETE", headers: auth }); await refresh();
       });
       tbody.append(h("tr", null,

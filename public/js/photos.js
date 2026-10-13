@@ -1,6 +1,6 @@
 // The photo drop: what guests land on after scanning the party's photo QR code.
 // Two big buttons (camera, camera roll), an optional name, and live progress.
-import { api } from "./api.js";
+import { api, myPhotos } from "./api.js";
 import { h, shrink } from "./invite-view.js";
 import { resolveTheme, applyTheme } from "./themes.js";
 import { iconSvg } from "./icons.js";
@@ -73,6 +73,21 @@ function fail(title, text) {
     summary, progress, camIn, rollIn, links);
 
   let added = 0, failed = 0, busy = false;
+  // Guests can take back a photo they don't like. Two taps, so nothing goes by accident.
+  function removeButton(tile, pid) {
+    const b = h("button", { class: "drop-remove", type: "button", "aria-label": "Remove this photo", text: "Remove" });
+    b.addEventListener("click", async () => {
+      if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Tap again"; setTimeout(() => { delete b.dataset.armed; b.textContent = "Remove"; }, 3500); return; }
+      b.disabled = true;
+      try {
+        await api(`/api/events/${id}/photos/${pid}`, { method: "DELETE", headers: { "x-photo-token": myPhotos.all(id)[pid] || "" } });
+        myPhotos.drop(id, pid);
+        tile.remove(); added = Math.max(0, added - 1);
+        summary.textContent = added ? `${added} ${added === 1 ? "photo" : "photos"} on the wall from you. Photo removed.` : "Photo removed.";
+      } catch (e) { b.disabled = false; b.textContent = "Remove"; summary.textContent = e.message; }
+    });
+    return b;
+  }
   const queue = [];
   function enqueue(files) {
     for (const f of Array.from(files || []).slice(0, 30)) {
@@ -94,8 +109,10 @@ function fail(title, text) {
         const fd = new FormData();
         fd.append("full", full.blob, "full.jpg"); fd.append("thumb", thumb.blob, "thumb.jpg");
         fd.append("name", nameIn.value.trim() || "Guest"); fd.append("w", full.w); fd.append("h", full.h);
-        await api(`/api/events/${id}/photos`, { method: "POST", form: fd });
+        const up = await api(`/api/events/${id}/photos`, { method: "POST", form: fd });
+        if (up && up.token) myPhotos.add(id, up.photo.id, up.token);
         tile.className = "drop-tile done"; label.textContent = "Added"; added++;
+        tile.append(removeButton(tile, up.photo.id));
       } catch (e) {
         tile.className = "drop-tile bad"; failed++;
         label.textContent = e.status ? "Didn't upload" : "Can't read this one";
