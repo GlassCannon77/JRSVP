@@ -2,12 +2,17 @@ import { api, hostKey, rememberParty, forgetParty } from "./api.js";
 import { h, fmtDate, fmtTime, saveFile } from "./invite-view.js";
 import { resolveTheme, applyTheme } from "./themes.js";
 import { qrSvg, downloadQrCard } from "./qr.js";
+import { openViewer } from "./viewer.js";
+import { fetchPhotos, canShareFiles, zipFiles, downloadBlob, slug } from "./save-photos.js";
 
 const app = document.getElementById("app");
 const id = (location.pathname.match(/^\/e\/([a-z0-9]+)/) || [])[1];
 const key = id ? hostKey.get(id) : null;
 const auth = { "x-host-key": key || "" };
 let state = null, filter = "all";
+// Save-all progress survives the page's auto-refresh.
+const saver = { busy: false, files: null, msg: "", shared: new Set(), forCount: 0 };
+const BATCH = 20;
 
 function fail(msg) {
   app.replaceChildren(h("div", { class: "host-wrap" }, h("div", { class: "box", style: "margin-top:24px" },
@@ -41,6 +46,58 @@ function armed(btn, label, run) {
 function csv(rows) {
   const esc = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
   return rows.map((r) => r.map(esc).join(",")).join("\r\n");
+}
+
+function saveAllPanel(ev, photos, src) {
+  const box = h("div", { class: "saveall" });
+  if (saver.files && saver.forCount !== photos.length) { saver.files = null; saver.shared.clear(); }
+  const status = h("p", { class: "status", role: "status", text: saver.msg });
+  const name = `${slug(ev.title)}-photos.zip`;
+  const zipBtn = h("button", { class: "btn ghost small", type: "button", disabled: saver.busy }, "Download as one ZIP file");
+  const startBtn = h("button", { class: "btn primary", type: "button", disabled: saver.busy }, saver.busy ? "Getting photos…" : `Save all ${photos.length} photos`);
+
+  async function gather() {
+    if (saver.files) return saver.files;
+    saver.busy = true; startBtn.disabled = zipBtn.disabled = true;
+    try {
+      saver.files = await fetchPhotos(photos, src, ev.title, (i, n) => { saver.msg = `Getting photo ${i} of ${n}…`; status.textContent = saver.msg; });
+      saver.forCount = photos.length;
+      return saver.files;
+    } finally { saver.busy = false; startBtn.disabled = zipBtn.disabled = false; }
+  }
+  async function zip() {
+    try {
+      const files = await gather();
+      saver.msg = "Packing the ZIP file…"; status.textContent = saver.msg;
+      downloadBlob(await zipFiles(files, `${ev.title} photos`), name);
+      saver.msg = `Downloaded ${files.length} photos as ${name}.`; render();
+    } catch (e) { saver.msg = "Couldn't build the ZIP. Check your connection and try again."; render(); }
+  }
+  startBtn.addEventListener("click", async () => {
+    try {
+      const files = await gather();
+      if (canShareFiles(files)) { saver.msg = files.length > BATCH ? "Ready. Tap each group below to save it to your phone." : "Ready. Tap below to save them to your phone."; render(); }
+      else await zip();
+    } catch { saver.msg = "Couldn't get the photos. Check your connection and try again."; render(); }
+  });
+  zipBtn.addEventListener("click", zip);
+
+  box.append(h("div", { class: "row" }, startBtn, zipBtn), status);
+  // phone: share-sheet batches ("Save Images" on iPhone puts them in Photos)
+  if (saver.files && canShareFiles(saver.files)) {
+    const groups = h("div", { class: "row" });
+    for (let i = 0; i < saver.files.length; i += BATCH) {
+      const chunk = saver.files.slice(i, i + BATCH), key = i, done = saver.shared.has(key);
+      const label = saver.files.length <= BATCH ? `Save ${chunk.length} photos to my phone` : `Photos ${i + 1}–${i + chunk.length}`;
+      groups.append(h("button", { class: "btn small " + (done ? "ghost" : "primary"), type: "button", onclick: async () => {
+        try { await navigator.share({ files: chunk, title: `${ev.title} photos` }); saver.shared.add(key); saver.msg = "Saved. On iPhone, choose Save Images in the share menu."; }
+        catch (e) { if (e && e.name !== "AbortError") saver.msg = "Your phone couldn't share that many at once. Try the ZIP file."; }
+        render();
+      } }, done ? (saver.files.length <= BATCH ? "Saved to your phone" : `Saved ${i + 1}–${i + chunk.length}`) : label));
+    }
+    box.append(groups, h("p", { class: "hint", text: "iPhone: tap Save Images. Android: choose your gallery or Google Photos. The ZIP file goes to Files or Downloads instead." }));
+  }
+  return box;
 }
 
 function render() {
@@ -143,17 +200,21 @@ function render() {
     alertBox);
 
   // photos
-  const photoBox = h("section", { class: "box" }, h("div", { class: "box-head" }, h("h2", { text: `Photos (${photos.length})` })));
+  const src = (p, size) => `/api/events/${id}/photos/${p.id}/${size}`;
+  const photoBox = h("section", { class: "box", id: "photos" }, h("div", { class: "box-head" }, h("h2", { text: `Photos (${photos.length})` })));
   if (!ev.photos.enabled) photoBox.append(h("p", { class: "empty-state", text: "The photo wall is off. Turn it on in Edit invitation." }));
   else if (!photos.length) photoBox.append(h("p", { class: "empty-state", text: "No photos yet. Print the photo sign or show guests the photo QR code at the party." }));
-  else photoBox.append(h("div", { class: "photo-grid" }, photos.map((p) => {
-    const del = armed(h("button", { class: "linkbtn", type: "button", text: "Delete" }), "Delete", async () => {
-      await api(`/api/events/${id}/photos/${p.id}`, { method: "DELETE", headers: auth }); await refresh();
-    });
-    return h("figure", null,
-      h("a", { href: `/api/events/${id}/photos/${p.id}/full`, target: "_blank", rel: "noopener" }, h("img", { src: `/api/events/${id}/photos/${p.id}/thumb`, alt: `Photo from ${p.name}`, loading: "lazy" })),
-      h("figcaption", null, h("span", { text: p.name }), del));
-  })));
+  else {
+    photoBox.append(saveAllPanel(ev, photos, src));
+    photoBox.append(h("p", { class: "hint", text: "Tap a photo to see it full size, save it, or delete it." }));
+    photoBox.append(h("div", { class: "photo-grid" }, photos.map((p, i) => h("figure", null,
+      h("button", { class: "shot-btn", type: "button", "aria-label": `Open photo from ${p.name}`, onclick: () => openViewer(photos, i, {
+        src, filePrefix: ev.title,
+        onDelete: async (ph) => { await api(`/api/events/${id}/photos/${ph.id}`, { method: "DELETE", headers: auth }); saver.files = null; },
+        onClose: () => refresh(),
+      }) }, h("img", { src: src(p, "thumb"), alt: `Photo from ${p.name}`, loading: "lazy" })),
+      h("figcaption", null, h("span", { text: p.name }))))));
+  }
 
   // danger zone
   const delParty = armed(h("button", { class: "btn danger small", type: "button", text: "Delete this party" }), "Delete this party", async () => {
@@ -179,5 +240,5 @@ async function refresh() {
   try { state = await load(); } catch (e) { return fail(e.status === 403 ? "That host key doesn't match this party." : e.message); }
   rememberParty({ id, key, title: state.event.title, date: state.event.date, theme: state.event.theme });
   render();
-  setInterval(() => { if (!document.hidden && !document.querySelector(".armed")) refresh(); }, 20000);
+  setInterval(() => { if (!document.hidden && !document.querySelector(".armed") && !saver.busy && !document.querySelector(".pv:not([hidden])")) refresh(); }, 20000);
 })();

@@ -6,6 +6,7 @@ import { iconSvg } from "./icons.js";
 import { startMotif } from "./motifs.js";
 import { qrSvg } from "./qr.js";
 import { api } from "./api.js";
+import { openViewer as showPhoto } from "./viewer.js";
 
 // ---------- small helpers ----------
 export function h(tag, attrs, ...kids) {
@@ -284,7 +285,6 @@ export function mountInvite(root, event, opts = {}) {
 
   // Photos
   let photoSec = null, grid = null, photoStatus = null;
-  const viewer = h("dialog", { class: "inv-viewer" });
   if (ev.photos.enabled) {
     photoSec = h("section", { class: "inv-section", id: "photos" }, h("h2", { text: t.copy.photosHeading }));
     const card = h("div", { class: "inv-card" });
@@ -321,17 +321,7 @@ export function mountInvite(root, event, opts = {}) {
   }
   function openViewer(i) {
     const list = data.photos || []; if (!list[i]) return;
-    const p = list[i];
-    viewer.textContent = "";
-    viewer.append(h("img", { src: photoSrc(p, "full"), alt: `Photo from ${p.name}` }),
-      h("div", { class: "bar" },
-        h("span", { text: `From ${p.name}` }),
-        h("span", { class: "inv-actions" },
-          i > 0 ? h("button", { class: "inv-btn ghost small", type: "button", onclick: () => openViewer(i - 1) }, "Previous") : null,
-          i < list.length - 1 ? h("button", { class: "inv-btn ghost small", type: "button", onclick: () => openViewer(i + 1) }, "Next") : null,
-          h("a", { class: "inv-btn ghost small", href: photoSrc(p, "full"), download: `party-photo-${p.id}.jpg` }, "Save"),
-          h("button", { class: "inv-btn ghost small", type: "button", onclick: () => viewer.close() }, "Close"))));
-    if (!viewer.open) viewer.showModal();
+    showPhoto(list, i, { src: photoSrc, filePrefix: ev.title });
   }
   async function upload(files, who, btn) {
     btn.disabled = true;
@@ -357,7 +347,6 @@ export function mountInvite(root, event, opts = {}) {
     opts.onChange && opts.onChange();
   }
   renderPhotos();
-  root.append(viewer);
 
   // QR ticket
   const codeBox = h("div", { class: "code" });

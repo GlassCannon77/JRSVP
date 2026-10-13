@@ -20,6 +20,8 @@ Seasonal party invitations with RSVPs, a live guest list, a photo wall and free 
 - **Photo wall:**
   - Guests scan the party QR code and land on a photo drop page (`/e/:id/photos`) with two big buttons, Take a photo and Choose from your photos. No app or sign-in.
   - Photos are shrunk on the phone before upload, and thumbnails keep the wall fast.
+  - Tapping a photo opens a full-screen viewer with a big close button. Swipe to browse; back, Escape or tapping outside also close it.
+  - **Save all photos** on the host page: on a phone, saves them to your camera roll through the share sheet (in groups of 20); anywhere, downloads one ZIP file.
 - **Free QR codes for every invite:**
   - The encoder is bundled in the site, so there's no QR service, API key or watermark.
   - Each invite has a code for the invitation and one for the photo drop.
@@ -105,6 +107,8 @@ public/js/themes.js                theme presets: colors, fonts, wording, motifs
 public/js/motifs.js                canvas animations
 public/js/icons.js                 theme emblems
 public/js/qr.js                    QR drawing and downloadable cards
+public/js/viewer.js                full-screen photo viewer
+public/js/save-photos.js           Save all photos (share sheet and ZIP)
 public/vendor/qrcode.js            QR encoder (Kazuhiko Arase, MIT license)
 ```
 
