@@ -81,7 +81,7 @@ const store = {
 };
 
 // Shrink a phone photo to a web size and a thumbnail before upload.
-function shrink(file, max, quality) {
+export function shrink(file, max, quality) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file), img = new Image();
     img.onload = () => {
@@ -110,7 +110,7 @@ export function mountInvite(root, event, opts = {}) {
   const t = resolveTheme(event);
   const ev = event;
   const inviteUrl = ev.id ? `${origin}/e/${ev.id}` : `${origin}/e/your-party`;
-  const photoUrl = inviteUrl + "#photos";
+  const photoUrl = inviteUrl + "/photos";
   const mine = () => (ev.id ? store.get(`kk:rsvp:${ev.id}`) : null);
   const qLabel = (ev.rsvp.question && ev.rsvp.question.label) || t.base.question.label;
   const qPlaceholder = (ev.rsvp.question && ev.rsvp.question.placeholder) || t.base.question.placeholder;
@@ -367,7 +367,7 @@ export function mountInvite(root, event, opts = {}) {
     const photos = which === "photos";
     codeBox.innerHTML = qrSvg(photos ? photoUrl : inviteUrl, { dark: "#17131c", light: "#ffffff", title: photos ? "QR code to add photos" : "QR code for this invitation" });
     stubTitle.textContent = photos ? "Photo drop" : "Pass it on";
-    stubText.textContent = photos ? "At the party, scan this to add the pictures you take." : "Scan to open this invitation on another phone.";
+    stubText.textContent = photos ? "At the party, scan this and tap Take a photo. No app or sign-in." : "Scan to open this invitation on another phone.";
     tabs.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.k === which)));
   }
   if (ev.photos.enabled && (ev.photos.uploads || opts.host)) {

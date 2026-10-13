@@ -58,14 +58,14 @@
   try {
     const { event: ev } = await api(`/api/events/${id}`);
     const t = resolveTheme(ev);
-    const url = `${location.origin}/e/${id}${forPhotos ? "#photos" : ""}`;
+    const url = `${location.origin}/e/${id}${forPhotos ? "/photos" : ""}`;
     const sheet = h("section", { class: "sheet" },
       h("div", { class: "icon", html: iconSvg(t.icon, t.colors, 96) }),
       h("p", { class: "eyebrow", text: forPhotos ? t.copy.photosHeading : t.copy.eyebrow }),
       h("h1", { text: ev.title }),
       h("p", { class: "cta", text: forPhotos ? "Scan to add your photos" : "Scan to RSVP" }),
       h("div", { class: "code", html: qrSvg(url, { dark: "#111", light: "#fff", title: forPhotos ? "QR code to add photos" : "QR code to RSVP" }) }),
-      h("p", { class: "sub", text: forPhotos ? "Point your phone camera here. No app or sign-in needed." : [ev.date ? fmtDate(ev.date) : "", ev.start ? fmtTime(ev.start) : ""].filter(Boolean).join(" · ") }),
+      h("p", { class: "sub", text: forPhotos ? "Point your phone camera here, then tap Take a photo. No app or sign-in." : [ev.date ? fmtDate(ev.date) : "", ev.start ? fmtTime(ev.start) : ""].filter(Boolean).join(" · ") }),
       h("p", { class: "url", text: url.replace(/^https?:\/\//, "") }));
     applyTheme(sheet, t);
     document.title = `${ev.title} · ${forPhotos ? "Photo" : "RSVP"} sign`;

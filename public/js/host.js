@@ -46,7 +46,7 @@ function csv(rows) {
 function render() {
   const { event: ev, rsvps = [], photos = [] } = state;
   const t = resolveTheme(ev);
-  const invite = `${location.origin}/e/${id}`, photoLink = `${invite}#photos`;
+  const invite = `${location.origin}/e/${id}`, photoLink = `${invite}/photos`;
   document.title = `${ev.title} · Host`;
 
   // header in the party's own colors

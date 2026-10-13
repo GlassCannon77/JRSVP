@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Photo Drop</title>
+<meta name="theme-color" content="#16131c">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/css/invite.css">
+<style>
+  html, body { margin: 0; min-height: 100%; background: #16131c; }
+  body { min-height: 100vh; }
+  .boot { min-height: 100vh; display: grid; place-items: center; color: #cfc8d4; font: 16px/1.5 system-ui, sans-serif; padding: 24px; text-align: center; }
+  .boot h1 { font-size: 1.4rem; margin: 0 0 6px; color: #fff; }
+  .inv .drop-wrap { padding-top: calc(28px + env(safe-area-inset-top, 0px)); gap: 18px; }
+  .drop-hero { display: flex; align-items: center; gap: 14px; }
+  .drop-hero .inv-icon svg { width: 52px; height: 52px; }
+  .drop-hero h1 { font-size: clamp(1.9rem, 8vw, 2.6rem); line-height: 1; color: var(--i-accent); }
+  .drop-hero p { font-size: .78rem; text-transform: uppercase; letter-spacing: .18em; font-weight: 700; color: var(--i-muted); margin-bottom: 4px; }
+  .drop-actions { display: grid; gap: 10px; }
+  .big { min-height: 64px; font-size: 1.15rem; border-radius: 16px; width: 100%; }
+  .big svg { width: 26px; height: 26px; flex: none; }
+  .drop-name { display: flex; flex-direction: column; gap: 6px; }
+  .drop-progress { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .drop-tile { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--i-surface); }
+  .drop-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .drop-tile span { position: absolute; inset: auto 0 0 0; padding: 5px 6px; font-size: .72rem; font-weight: 800; text-align: center; background: rgb(0 0 0 / .62); color: #fff; }
+  .drop-tile.done span { background: var(--i-accent); color: var(--i-accent-ink); }
+  .drop-tile.bad span { background: #b4232f; }
+  .drop-tile.wait img { opacity: .55; }
+  .drop-summary { text-align: center; font-weight: 700; font-size: 1.05rem; }
+  .drop-links { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+</style>
+</head>
+<body>
+<div id="app"><div class="boot"><p>Opening the photo drop…</p></div></div>
+<script src="/vendor/qrcode.js"></script>
+<script type="module" src="/js/photos.js"></script>
+</body>
+</html>

@@ -13,6 +13,11 @@
   status = 200
 
 [[redirects]]
+  from = "/e/:id/photos"
+  to = "/photos.html"
+  status = 200
+
+[[redirects]]
   from = "/e/:id/poster"
   to = "/poster.html"
   status = 200

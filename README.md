@@ -18,7 +18,7 @@ Seasonal party invitations with RSVPs, a live guest list, a photo wall and free 
   - Shows on the invite, or you can hide it.
   - Contact details and notes are only visible to you.
 - **Photo wall:**
-  - Guests scan the party QR code and add photos straight from their phone.
+  - Guests scan the party QR code and land on a photo drop page (`/e/:id/photos`) with two big buttons, Take a photo and Choose from your photos. No app or sign-in.
   - Photos are shrunk on the phone before upload, and thumbnails keep the wall fast.
 - **Free QR codes for every invite:**
   - The encoder is bundled in the site, so there's no QR service, API key or watermark.
@@ -99,6 +99,7 @@ netlify/functions/invite-page.mjs  serves /e/:id with link-preview tags
 public/index.html                  builder with live preview
 public/invite.html                 guest invitation
 public/host.html                   host page
+public/photos.html                 photo drop page the photo QR code opens
 public/poster.html                 printable QR sign
 public/js/themes.js                theme presets: colors, fonts, wording, motifs
 public/js/motifs.js                canvas animations
